@@ -23,7 +23,7 @@ export default defineConfig(({ mode }) => {
             background_color: '#050505',
             display: 'standalone',
             scope: '/',
-            start_url': '/',
+            start_url: '/',
             icons: [
               {
                 src: 'pwa-192x192.png',
