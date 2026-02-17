@@ -58,12 +58,13 @@ export const Settings: React.FC<SettingsProps> = ({ profile, targets, onSave }) 
         
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <div className="flex flex-col">
-                <label className="text-xs text-gray-500 mb-1 font-mono">PESO (KG)</label>
+                <label className="text-xs text-gray-500 mb-1 font-mono">PESO ATUAL (KG) <span className="text-cyber-secondary">*LOG</span></label>
                 <input 
                     type="number" 
                     value={localProfile.weight_kg} 
                     onChange={(e) => handleProfileChange('weight_kg', parseFloat(e.target.value))}
                     className="bg-black border border-gray-700 rounded p-2 text-white focus:border-cyber-primary focus:outline-none"
+                    step="0.1"
                 />
             </div>
             <div className="flex flex-col">

@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { loadState, saveState, getTodayKey } from './services/storage';
-import { AppState, DailyLog, FoodEntry, ExerciseEntry, UserProfile, UserTargets } from './types';
+import { AppState, DailyLog, FoodEntry, ExerciseEntry, UserProfile, UserTargets, FavoriteEntry } from './types';
 import { ChatLogger } from './components/ChatLogger';
 import { Dashboard } from './components/Dashboard';
 import { Settings } from './components/Settings';
 import { History } from './components/History';
 import { Analytics } from './components/Analytics';
-import { LayoutDashboard, Settings as SettingsIcon, History as HistoryIcon, Terminal, BarChart2 } from 'lucide-react';
+import { LayoutDashboard, Settings as SettingsIcon, History as HistoryIcon, Terminal, BarChart2, Droplet } from 'lucide-react';
 
 const App: React.FC = () => {
   const [state, setState] = useState<AppState>(loadState());
@@ -87,12 +87,49 @@ const App: React.FC = () => {
     });
   };
 
-  const handleSaveSettings = (profile: UserProfile, targets: UserTargets) => {
-    setState(prev => ({
-      ...prev,
-      profile,
-      targets
-    }));
+  const handleAddFavorite = (entry: FoodEntry) => {
+      const newFav: FavoriteEntry = {
+          id: crypto.randomUUID(),
+          name: entry.name,
+          nutrients: entry.nutrients
+      };
+      setState(prev => ({
+          ...prev,
+          favorites: [...prev.favorites, newFav]
+      }));
+  };
+
+  const handleUseFavorite = (fav: FavoriteEntry) => {
+      const newEntry: FoodEntry = {
+          id: crypto.randomUUID(),
+          type: 'food',
+          name: fav.name,
+          category: 'snack', // Default, user can maybe change logic later
+          timestamp: Date.now(),
+          nutrients: fav.nutrients
+      };
+      handleAddEntry(newEntry);
+  };
+
+  const handleSaveSettings = (newProfile: UserProfile, newTargets: UserTargets) => {
+    setState(prev => {
+        // Sync the weight to today's daily log
+        const currentLog = prev.logs[todayKey] || { date: todayKey, entries: [], exercises: [], water_ml: 0 };
+        const updatedLog = {
+            ...currentLog,
+            weight_kg: newProfile.weight_kg
+        };
+
+        return {
+            ...prev,
+            profile: newProfile,
+            targets: newTargets,
+            logs: {
+                ...prev.logs,
+                [todayKey]: updatedLog
+            }
+        };
+    });
     setActiveTab('dashboard');
   };
 
@@ -120,7 +157,10 @@ const App: React.FC = () => {
           <History 
             logs={state.logs} 
             currentDate={todayKey} 
+            favorites={state.favorites}
             onDeleteEntry={handleDeleteEntry}
+            onAddFavorite={handleAddFavorite}
+            onUseFavorite={handleUseFavorite}
             fullState={state}
           />
         );
@@ -150,9 +190,23 @@ const App: React.FC = () => {
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto max-w-4xl pt-24 px-4">
+      <main className="container mx-auto max-w-4xl pt-24 px-4 pb-24">
         {renderContent()}
       </main>
+
+      {/* Quick Water FAB */}
+      <div className="fixed bottom-20 right-4 md:bottom-8 md:right-8 z-40">
+        <button 
+            onClick={() => handleAddWater(250)}
+            className="w-14 h-14 bg-blue-600 hover:bg-blue-500 rounded-full shadow-[0_0_20px_rgba(37,99,235,0.5)] flex items-center justify-center text-white transition-all active:scale-95 group"
+            title="+250ml Water"
+        >
+            <Droplet className="w-6 h-6 fill-current" />
+            <span className="absolute -top-8 bg-black/80 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                +250ml
+            </span>
+        </button>
+      </div>
 
       {/* Mobile Navigation (Sticky Bottom) */}
       <nav className="fixed bottom-0 w-full bg-cyber-dark border-t border-gray-800 z-50 md:hidden">

@@ -1,4 +1,4 @@
-import { AppState, DEFAULT_PROFILE, DEFAULT_TARGETS, DailyLog } from '../types';
+import { AppState, DEFAULT_PROFILE, DEFAULT_TARGETS, DailyLog, FoodEntry } from '../types';
 
 const STORAGE_KEY = 'BIO_LINK_DATA_V1';
 
@@ -9,24 +9,31 @@ export const loadState = (): AppState => {
       return {
         profile: DEFAULT_PROFILE,
         targets: DEFAULT_TARGETS,
+        favorites: [],
         logs: {},
       };
     }
     const parsed = JSON.parse(serialized);
     
-    // MIGRATION LOGIC: Ensure logs have the new 'exercises' array if it didn't exist
+    // MIGRATION LOGIC
     const migratedLogs: Record<string, DailyLog> = {};
     if (parsed.logs) {
       Object.keys(parsed.logs).forEach(key => {
+        const log = parsed.logs[key];
         migratedLogs[key] = {
-          ...parsed.logs[key],
-          exercises: parsed.logs[key].exercises || [], // Default to empty array if missing
+          ...log,
+          exercises: log.exercises || [],
+          entries: (log.entries || []).map((entry: any) => ({
+             ...entry,
+             category: entry.category || 'snack' // Default category for old entries
+          }))
         };
       });
     }
 
     return {
       ...parsed,
+      favorites: parsed.favorites || [],
       targets: {
         ...DEFAULT_TARGETS,
         ...(parsed.targets || {})
@@ -42,6 +49,7 @@ export const loadState = (): AppState => {
     return {
       profile: DEFAULT_PROFILE,
       targets: DEFAULT_TARGETS,
+      favorites: [],
       logs: {},
     };
   }

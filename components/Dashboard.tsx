@@ -1,6 +1,6 @@
 import React from 'react';
 import { DailyLog, UserTargets, UserProfile } from '../types';
-import { Droplet, Activity, Flame, Layers, Cpu, Dumbbell } from 'lucide-react';
+import { Droplet, Activity, Flame, Layers, HeartPulse } from 'lucide-react';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Cell } from 'recharts';
 
 interface DashboardProps {
@@ -14,15 +14,33 @@ const ProgressBar: React.FC<{
   label: string; 
   current: number; 
   target: number; 
-  color: string; 
-  unit: string 
-}> = ({ label, current, target, color, unit }) => {
-  const percentage = Math.min(100, Math.max(0, (current / target) * 100));
+  unit: string;
+  variant?: 'limit' | 'target'; // 'limit' turns red when full, 'target' turns green
+}> = ({ label, current, target, unit, variant = 'limit' }) => {
+  const rawPercentage = (current / target) * 100;
+  const percentage = Math.min(100, Math.max(0, rawPercentage));
   
+  let color = '#00f0ff'; // Default Cyan
+
+  if (variant === 'limit') {
+      // Logic for things you shouldn't exceed (Fat, Carbs in cut)
+      if (percentage >= 100) color = '#ff003c'; // Red (Limit Reached)
+      else if (percentage > 85) color = '#fcee0a'; // Yellow (Warning)
+      else color = '#00f0ff'; // Cyan (Safe)
+  } else {
+      // Logic for things you want to reach (Protein)
+      if (percentage >= 100) color = '#39ff14'; // Neon Green (Success)
+      else if (percentage > 50) color = '#00f0ff'; // Cyan (On track)
+      else color = '#00f0ff';
+  }
+
   return (
     <div className="mb-4 group">
       <div className="flex justify-between text-xs font-mono mb-1 text-gray-400">
-        <span className="group-hover:text-white transition-colors uppercase tracking-widest">{label}</span>
+        <span className="group-hover:text-white transition-colors uppercase tracking-widest flex items-center gap-2">
+            {label}
+            {percentage >= 100 && <span className="text-[8px] px-1 rounded bg-gray-800 text-white border border-gray-600">COMPLETED</span>}
+        </span>
         <span>
           <span className="text-white font-bold">{Math.round(current)}</span>
           <span className="text-gray-600">/</span>
@@ -85,11 +103,16 @@ export const Dashboard: React.FC<DashboardProps> = ({ log, targets, profile, onA
             {Math.round(netCalories)}
             <span className="text-sm text-gray-500 font-mono ml-1">/ {tdee}</span>
           </div>
-          <div className="text-[10px] mt-2 font-mono" style={{ color: balanceColor }}>
-             {balance > 0 ? '+' : ''}{Math.round(balance)} kcal ({balance > 0 ? 'Surplus' : 'Deficit'})
+          
+          {/* Explicit Calculation Breakdown */}
+          <div className="flex items-center gap-2 text-[10px] text-gray-500 font-mono mt-2 border-t border-gray-800 pt-2">
+            <span className="text-gray-400">{Math.round(totals.calories)} In</span>
+            <span className="text-gray-600">-</span>
+            <span className="text-orange-400">{Math.round(burnedCalories)} Out</span>
           </div>
-          <div className="text-[10px] text-gray-500 mt-1">
-              Food: {Math.round(totals.calories)} | Burn: {Math.round(burnedCalories)}
+
+          <div className="text-[10px] mt-1 font-mono" style={{ color: balanceColor }}>
+             {balance > 0 ? '+' : ''}{Math.round(balance)} kcal ({balance > 0 ? 'Surplus' : 'Deficit'})
           </div>
         </div>
         
@@ -104,7 +127,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ log, targets, profile, onA
             <span className="text-sm text-gray-500 font-mono ml-1">kcal</span>
           </div>
            <div className="text-[10px] text-gray-500 mt-2 font-mono">
-               {(log.exercises || []).length} sessões hoje
+               {(log.exercises || []).length} sessões
            </div>
         </div>
 
@@ -118,34 +141,38 @@ export const Dashboard: React.FC<DashboardProps> = ({ log, targets, profile, onA
             {(log.water_ml / 1000).toFixed(1)}L
             <span className="text-sm text-gray-500 font-mono ml-1">/ {(targets.water_ml / 1000).toFixed(1)}L</span>
           </div>
-          <div className="flex gap-2 mt-2">
-            <button onClick={() => onAddWater(250)} className="bg-blue-900/30 hover:bg-blue-800/50 text-blue-300 text-[10px] px-2 py-1 rounded border border-blue-900 transition-colors">
-              +250ml
-            </button>
-            <button onClick={() => onAddWater(500)} className="bg-blue-900/30 hover:bg-blue-800/50 text-blue-300 text-[10px] px-2 py-1 rounded border border-blue-900 transition-colors">
-              +500ml
-            </button>
+          <div className="text-[10px] text-gray-500 mt-2 font-mono">
+              Use o botão + para adicionar
           </div>
         </div>
 
-        {/* Micros Summary */}
-        <div className="bg-cyber-panel border border-gray-800 p-4 rounded-lg flex flex-col justify-center">
-            <div className="flex items-center gap-2 mb-2">
-                <Cpu className="w-4 h-4 text-purple-400" />
-                <span className="text-xs text-gray-400 uppercase tracking-widest font-mono">Micros</span>
+        {/* Bio-Status Monitor (Micros) */}
+        <div className="bg-cyber-panel border border-gray-800 p-4 rounded-lg relative overflow-hidden">
+            <div className="flex items-center gap-2 mb-3 border-b border-gray-800 pb-2">
+                <HeartPulse className="w-4 h-4 text-purple-500 animate-pulse" />
+                <span className="text-xs text-gray-400 uppercase tracking-widest font-mono">BIO-STATUS</span>
             </div>
-            <div className="space-y-1">
-                <div className="flex justify-between items-center">
-                    <div className="text-[10px] text-gray-500">Fibra</div>
-                    <div className="text-[10px] font-bold font-mono text-purple-200">{totals.fiber.toFixed(0)}/{targets.fiber_g}g</div>
+            <div className="space-y-2">
+                <div className="flex justify-between items-center group">
+                    <div className="text-[10px] text-gray-500 group-hover:text-purple-300 transition-colors">Fibra</div>
+                    <div className="h-1 w-16 bg-gray-800 rounded overflow-hidden">
+                        <div className="h-full bg-purple-500" style={{ width: `${Math.min(100, (totals.fiber/targets.fiber_g)*100)}%` }}></div>
+                    </div>
+                    <div className="text-[10px] font-mono text-purple-200 w-8 text-right">{Math.round(totals.fiber)}g</div>
                 </div>
-                <div className="flex justify-between items-center">
-                    <div className="text-[10px] text-gray-500">Sódio</div>
-                    <div className="text-[10px] font-bold font-mono text-purple-200">{totals.sodium.toFixed(0)}/{targets.sodium_mg}mg</div>
+                <div className="flex justify-between items-center group">
+                    <div className="text-[10px] text-gray-500 group-hover:text-purple-300 transition-colors">Sódio</div>
+                    <div className="h-1 w-16 bg-gray-800 rounded overflow-hidden">
+                        <div className={`h-full ${totals.sodium > targets.sodium_mg ? 'bg-red-500' : 'bg-purple-500'}`} style={{ width: `${Math.min(100, (totals.sodium/targets.sodium_mg)*100)}%` }}></div>
+                    </div>
+                     <div className="text-[10px] font-mono text-purple-200 w-8 text-right">{(totals.sodium/1000).toFixed(1)}g</div>
                 </div>
-                 <div className="flex justify-between items-center">
-                    <div className="text-[10px] text-gray-500">Potás</div>
-                    <div className="text-[10px] font-bold font-mono text-purple-200">{totals.potassium.toFixed(0)}/{targets.potassium_mg}mg</div>
+                 <div className="flex justify-between items-center group">
+                    <div className="text-[10px] text-gray-500 group-hover:text-purple-300 transition-colors">Potás</div>
+                     <div className="h-1 w-16 bg-gray-800 rounded overflow-hidden">
+                        <div className="h-full bg-purple-500" style={{ width: `${Math.min(100, (totals.potassium/targets.potassium_mg)*100)}%` }}></div>
+                    </div>
+                    <div className="text-[10px] font-mono text-purple-200 w-8 text-right">{(totals.potassium/1000).toFixed(1)}g</div>
                 </div>
             </div>
         </div>
@@ -161,9 +188,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ log, targets, profile, onA
                 <h3 className="text-lg font-sans font-bold text-white tracking-wide">MACRONUTRIENTES</h3>
             </div>
             
-            <ProgressBar label="Proteína" current={totals.protein} target={targets.protein_g} color="#00f0ff" unit="g" />
-            <ProgressBar label="Carboidratos" current={totals.carbs} target={targets.carbs_g} color="#fcee0a" unit="g" />
-            <ProgressBar label="Gorduras" current={totals.fat} target={targets.fat_g} color="#ff003c" unit="g" />
+            <ProgressBar label="Proteína" current={totals.protein} target={targets.protein_g} unit="g" variant="target" />
+            <ProgressBar label="Carboidratos" current={totals.carbs} target={targets.carbs_g} unit="g" variant="limit" />
+            <ProgressBar label="Gorduras" current={totals.fat} target={targets.fat_g} unit="g" variant="limit" />
             
              <div className="mt-6 pt-4 border-t border-gray-800 text-xs font-mono text-gray-500 flex justify-between">
                 <span>STATUS: {balance > 0 ? 'SUPERÁVIT (+G)' : 'DÉFICIT (-G)'}</span>

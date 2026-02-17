@@ -12,6 +12,7 @@ export interface FoodEntry {
   id: string;
   type: 'food';
   name: string; 
+  category: 'breakfast' | 'lunch' | 'dinner' | 'snack'; // New field
   timestamp: number;
   nutrients: Nutrients;
 }
@@ -23,6 +24,12 @@ export interface ExerciseEntry {
   timestamp: number;
   calories_burned: number;
   duration_minutes?: number;
+}
+
+export interface FavoriteEntry {
+    id: string;
+    name: string;
+    nutrients: Nutrients;
 }
 
 export interface UserTargets {
@@ -57,6 +64,7 @@ export interface DailyLog {
 export interface AppState {
   profile: UserProfile;
   targets: UserTargets;
+  favorites: FavoriteEntry[]; // New global state
   logs: Record<string, DailyLog>; // Keyed by YYYY-MM-DD
 }
 
