@@ -1,13 +1,8 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Nutrients } from "../types";
 
-const apiKey = process.env.GEMINI_API_KEY;
-
-if (!apiKey) {
-  console.warn("Chave da API Gemini não encontrada. O app funcionará em modo offline.");
-}
-
-const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
+// NOTE: process.env.API_KEY is injected by the environment.
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 const SYSTEM_PROMPT = `
 You are an advanced Bio-Nutritional Analysis AI. 
@@ -58,7 +53,6 @@ const RESPONSE_SCHEMA = {
 };
 
 export const analyzeInput = async (text: string): Promise<AnalysisResult | null> => {
-  if (!ai) return Promise.resolve(null);
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
@@ -82,7 +76,6 @@ export const analyzeInput = async (text: string): Promise<AnalysisResult | null>
 };
 
 export const analyzeImageInput = async (base64Image: string): Promise<AnalysisResult | null> => {
-    if (!ai) return Promise.resolve(null);
     try {
         const response = await ai.models.generateContent({
             model: 'gemini-3-flash-preview',
@@ -110,7 +103,6 @@ export const analyzeImageInput = async (base64Image: string): Promise<AnalysisRe
 };
 
 export const generateDailyInsight = async (recentLogs: any): Promise<string> => {
-    if (!ai) return Promise.resolve("Chave de API não configurada. Insights indisponíveis.");
     try {
         const response = await ai.models.generateContent({
             model: 'gemini-3-flash-preview',
