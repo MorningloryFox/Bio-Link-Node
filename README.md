@@ -6,7 +6,7 @@
 
 ## // Visão Geral
 
-O **BIO-LINK.NODE** é um dashboard de bio-análise que atua como uma ponte direta entre seus dados metabólicos e uma inteligência artificial preditiva. Em vez de registrar dados manualmente em interfaces genéricas, o sistema utiliza o Google Gemini 1.5 Flash para interpretar texto e imagens, transformando o rastreamento de saúde em uma experiência imersiva e visualmente recompensadora, com uma estética cyberpunk que redefine o engajamento do usuário com seus próprios dados biológicos.
+O **BIO-LINK.NODE** é um dashboard de bio-análise que atua como uma ponte direta entre seus dados metabólicos e uma inteligência artificial preditiva. Em vez de registrar dados manualmente em interfaces genéricas, o sistema utiliza o Google Gemini 2.5 Flash para interpretar texto e imagens, transformando o rastreamento de saúde em uma experiência imersiva e visualmente recompensadora, com uma estética cyberpunk que redefine o engajamento do usuário com seus próprios dados biológicos.
 
 Este projeto foi construído com uma stack moderna (Next.js/React 19, Vite, Tailwind CSS) para garantir uma interface reativa e performática.
 
